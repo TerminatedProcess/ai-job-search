@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Job Application Assistant for [YOUR_NAME]
 
 <!-- SETUP: This file is populated by running /setup -->
@@ -90,8 +94,37 @@ automatically from your Languages table above - don't duplicate them here. -->
 ## Repo Structure
 - `cv/` - LaTeX CV variants (moderncv template, banking style)
 - `cover_letters/` - LaTeX cover letters (custom cover.cls template)
-- `.claude/skills/` - AI skill definitions for the application workflow
-- `.agents/skills/` - Job search CLI tools
+- `.claude/commands/` - Slash-command specs (`/setup`, `/scrape`, `/rank`, `/apply`, `/interview`, `/outcome`, ...). The markdown specs ARE the implementation; there is no other copy
+- `.claude/skills/job-application-assistant/` - Methodology + profile files (`01-`..`09-*.md`), each carrying a `framework_version` frontmatter key
+- `.claude/agents/` - Subagents the commands dispatch (`posting-fetcher`, `posting-scorer`, `application-reviewer`); read/fetch only, no writes
+- `.agents/skills/<portal>/cli/` - Bun/TypeScript job-portal search CLIs (portable Agent Skills format), orchestrated by `/scrape`
+- `tools/` - Deterministic Python helpers the commands call (posting integrity gate, scrape/rank state, PDF/layout verification, security guards, lint)
+- `documents/`, `job_scraper/`, `company_research/`, `upskill/` - Personal working data; gitignored apart from `.gitkeep`/README
+- `AGENTS.md` - Thin pointer for non-Claude runtimes; do not duplicate specs into it
+
+## Developing the Framework
+This is a **personal fork** (`TerminatedProcess/ai-job-search`, parent `ai-job-search-dev/ai-job-search`). **Never open PRs, issues, or comments against the upstream/parent repo, and never push anywhere but `origin`.** `gh` default repo is pinned to the fork (`gh repo set-default`); always pass `--repo TerminatedProcess/ai-job-search` to `gh pr`/`gh issue` anyway, since `gh` otherwise targets the parent of a fork. Pulling upstream changes in (cherry-picks, `tools/check_upstream_updates.py`, the `upstream-watch` workflow, which only writes issues to this fork) is fine. `CONTRIBUTING.md`'s upstream contribution rules don't apply. The fork is **public**, so keep personal data out of git (the `.gitignore` personal-data rules stay).
+
+Shell: `.salias` provides `mkenv` / `rmenv` / `install` (uv `.venv`, Python 3.13, plus `bun install` for every portal CLI).
+
+Run what CI runs (`.github/workflows/ci.yml`):
+```bash
+python3 tools/lint_skills.py              # SKILL.md frontmatter, command titles, settings.json (needs pyyaml)
+python3 tools/security_guards.py          # fails on widened permissions, weakened .gitignore, lifecycle scripts
+python3 tools/check_framework_version.py  # edited 0*-*.md / AGENTS.md must bump framework_version
+python3 -m unittest discover -s tests -t . -v
+python3 -m unittest tests.test_rank_state -v   # single module
+python3 tools/install_portal_clis.py           # bun install for every portal CLI
+cd .agents/skills/<portal>/cli && bun run typecheck && bun test   # or: bun test tests/<file>.test.ts
+```
+LaTeX smoke: `cd cv && lualatex main_example.tex`, `cd cover_letters && xelatex cover_example.tex`, then `python3 tools/verify_pdf.py <pdf> --pages N`.
+
+Gotchas:
+- Python tool tests go in `tests/`; CLI tests in `.agents/skills/<name>/cli/tests/` (network-free, mocked). CI never makes live portal requests - don't add any.
+- Tests must pass on Windows/Git Bash too: open files with explicit `encoding="utf-8"` and don't assume a UTF-8 console.
+- Portal CLI contract: `search`/`detail` commands, `--format json|table|plain`, JSON errors on stderr with exit 1, backoff on 429/5xx, zero runtime dependencies. `linkedin-search` is the reference.
+- A new tool invoked by a command needs a matching `Bash(...)` allow entry in `.claude/settings.json`, which `security_guards.py` checks against its allowlist.
+- `/setup` fills this file's `[PLACEHOLDER]` tokens in place and must leave its structure, workflow and checklist intact. (CI's `placeholder-integrity`, framework-version, and exact-page-count jobs only run on the upstream repo, not here.)
 
 ## Workflow for New Job Applications
 1. User provides a job posting (URL or text)
