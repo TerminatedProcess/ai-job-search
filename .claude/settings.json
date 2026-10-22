@@ -35,8 +35,7 @@
       "Edit(.claude/commands/*.md)",
       "Edit(.claude/agents/**)",
       "Edit(.github/**)",
-      "Edit(tools/security_guards.py)",
-      "Bash(git push:*)"
+      "Edit(tools/security_guards.py)"
     ],
     "deny": [
       "Read(.env)",

@@ -207,7 +207,6 @@ class AskDenyRuleTests(GuardRepoFixture):
         # `allowed-tools: Bash` to apply.md with no prompt and the next /apply
         # would be pre-approved for bare Bash.
         self.assertIn("Edit(.claude/commands/*.md)", security_guards.REQUIRED_ASK_RULES)
-        self.assertIn("Bash(git push:*)", security_guards.REQUIRED_ASK_RULES)
         # The posting integrity gate runs inside fetch agents with no prompt.
         self.assertIn("Bash(python tools/posting_guard.py:*)", security_guards.ALLOWED_PERMISSIONS)
         self.assertIn("Bash(python3 tools/posting_guard.py:*)", security_guards.ALLOWED_PERMISSIONS)

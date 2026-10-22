@@ -95,8 +95,9 @@ ALLOWED_PERMISSIONS = {
 # forces a prompt even when an allow rule or a skill's allowed-tools grant
 # would otherwise pre-approve the call. These are the files whose content IS
 # the permission surface: a session that could edit them silently could widen
-# its own grants. Plus the one outbound git action. Extra ask rules are fine;
-# removing one of these fails.
+# its own grants. Extra ask rules are fine; removing one of these fails.
+# (Fork: `git push` ask rule dropped - pushes only reach origin; upstream's
+# push URL is disabled.)
 REQUIRED_ASK_RULES = [
     "Edit(.claude/settings.json)",
     "Edit(.claude/settings.local.json)",
@@ -106,7 +107,6 @@ REQUIRED_ASK_RULES = [
     "Edit(.claude/agents/**)",
     "Edit(.github/**)",
     "Edit(tools/security_guards.py)",
-    "Bash(git push:*)",
 ]
 
 # Rules that must stay in .claude/settings.json permissions.deny. A deny rule
